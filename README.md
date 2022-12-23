@@ -11,4 +11,4 @@ Implementation should be carried out for following targets:
  - Arduino Nano 33 IoT
  - IIoT Host
 
-![TechStack](https://github.com/labinho/FermLab/blob/[master]/TechStack.jpg?raw=true)
+![TechStack](https://github.com/labinho/FermLab/blob/master/TechStack.jpg?raw=true)
