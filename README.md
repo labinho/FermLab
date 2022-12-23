@@ -10,3 +10,5 @@ Implementation should be carried out for following targets:
  - ESP8266
  - Arduino Nano 33 IoT
  - IIoT Host
+
+![TechStack](https://github.com/labinho/FermLab/blob/[master]/TechStack.jpg?raw=true)
