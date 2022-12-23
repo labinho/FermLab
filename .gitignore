@@ -3,6 +3,9 @@
 /workspace.xml
 .DS_Store
 
+### Arduino ###
+FermLabESP8266/credentials.h
+
 ### Maven ###
 */target/
 */.idea/

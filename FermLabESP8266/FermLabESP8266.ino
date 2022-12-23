@@ -1,24 +1,79 @@
-/*
-  ESP8266 Blink by Simon Peter
-  Blink the blue LED on the ESP-01 module
-  This example code is in the public domain
+/* 
+ * Name:    FermLabESP8266
+ * Author:  Christopher Labisch
+ * Date:    2022-12-24
+ * Version: 1.0.0
+ */
+#include <ESP8266WiFi.h>
+#include <time.h>
+#include <TZ.h>
+#include "sparkplug_b.pb.h"
+#include "pb.h"
+#include "nanopb-src/pb_common.h"
+#include "nanopb-src/pb_encode.h"
+#include "nanopb-src/pb_decode.h"
+/* 
+ * create your own "credentials.h"
+ * const char* ssid = "SSID";
+ * const char* password = "password";
+ */
+#include "credentials.h"
 
-  The blue LED on the ESP-01 module is connected to GPIO1
-  (which is also the TXD pin; so we cannot use Serial.print() at the same time)
+org_eclipse_tahu_protobuf_Payload payload = org_eclipse_tahu_protobuf_Payload_init_zero;
 
-  Note that this sketch uses LED_BUILTIN to find the pin with the internal LED
-*/
-
-void setup() {
-  pinMode(LED_BUILTIN, OUTPUT);     // Initialize the LED_BUILTIN pin as an output
+void setup_wifi() {
+  delay(10);
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  randomSeed(micros());
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
 }
 
-// the loop function runs over and over again forever
+time_t setDateTime() {
+  configTime(TZ_Europe_Berlin, "pool.ntp.org", "time.nist.gov");
+  Serial.print("Waiting for NTP time sync: ");
+  time_t now = time(nullptr);
+  while (now < 8 * 3600 * 2) {
+    delay(100);
+    Serial.print(".");
+    now = time(nullptr);
+  }
+  Serial.println();
+  struct tm timeinfo;
+  gmtime_r(&now, &timeinfo);
+  Serial.printf("%s %s", tzname[0], asctime(&timeinfo));
+  return now;
+}
+
+void setup() {
+  delay(500);
+  Serial.begin(9600);
+  delay(500);
+  pinMode(LED_BUILTIN, OUTPUT); 
+  digitalWrite(LED_BUILTIN, HIGH);
+  setup_wifi();
+  time_t current_time = setDateTime();
+  payload.has_timestamp = true;
+  payload.timestamp = current_time;
+  payload.has_seq = true;
+  payload.seq = 0;
+}
+
 void loop() {
-  digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
-  // but actually the LED is on; this is because
-  // it is active low on the ESP-01)
-  delay(1000);                      // Wait for a second
-  digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
-  delay(2000);                      // Wait for two seconds (to demonstrate the active low LED)
+  Serial.println(payload.timestamp);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(1000);
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(1000);
+  payload.timestamp = payload.timestamp + 2;
 }
