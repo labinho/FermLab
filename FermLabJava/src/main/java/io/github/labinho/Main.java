@@ -62,19 +62,16 @@ import org.eclipse.tahu.util.CompressionAlgorithm;
 import org.eclipse.tahu.util.PayloadUtil;
 
 public class Main {
-// TODO: "public STATIC class Main {}" benötigt Implementierung von MqttCallbackExtended
-
     private int seq = 0;
+    // TODO: Find out what seqLock is doing.
     private Object seqLock = new Object();
     private String serverUrl = "tcp://localhost:1883";
     private String clientId = "SparkplugBExampleEdgeNode";
     private MqttClient client;
 
     public void run() {
-        System.out.println("Hello FermLabJava");
-
         try {
-            System.out.println("Create client");
+            // TODO: What are attributes and methods of MqttClient? Find out what is available after declaration.
             client = new MqttClient(serverUrl, clientId);
             client.setTimeToWait(2000);
             publishBirth();
@@ -83,7 +80,7 @@ public class Main {
         }
     }
     public static void main(String[] args) {
-        System.out.println("Create new Main()");
+        System.out.println("Hello FermLabJava");
         Main example = new Main();
         example.run();
     }
@@ -91,35 +88,29 @@ public class Main {
         publishNodeBirth();
         publishDeviceBirth();
     }
-
     private void publishNodeBirth() {
-        System.out.println("publish Node Birth");
+        System.out.println("publishNodeBirth()");
         try {
+            // TODO: What does 'synchronized' mean? Find out what 'synchronized (seqLock) {}' is doing.
             synchronized (seqLock) {
-                // Reset the sequence number
-                seq = 0;
-                // Create the BIRTH payload and set the position and other metrics
-                SparkplugBPayload payload =
-                        new SparkplugBPayload(new Date(), new ArrayList<>(), getSeqNum(), newUUID(), null);
+                // seq = 0;
+                // TODO: What is the structure of 'payload'? Find out how to access and populate 'ArrayList'.
+                SparkplugBPayload payload = new SparkplugBPayload(new Date(), new ArrayList<>(), getSeqNum(), newUUID(), null);
+                System.out.println(payload);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
+    private void publishDeviceBirth() {
+    }
     private long getSeqNum() throws Exception {
-        System.out.println("seq: " + seq);
         if (seq == 256) {
             seq = 0;
         }
         return seq++;
     }
-
     private String newUUID() {
         return java.util.UUID.randomUUID().toString();
-    }
-
-    private void publishDeviceBirth() {
-        System.out.println("publish Device Birth");
     }
 }
