@@ -2,9 +2,11 @@
 /shelf/
 /workspace.xml
 .DS_Store
+*credentials.h
 
 ### Arduino ###
-FermLabESP8266/credentials.h
+
+### PlatformIO ###
 
 ### Maven ###
 */target/
