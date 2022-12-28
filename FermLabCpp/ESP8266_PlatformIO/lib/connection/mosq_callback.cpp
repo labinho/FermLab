@@ -5,7 +5,7 @@ void mosq_callback(char *topic, byte *payload, unsigned int length) {
   Serial.println(topic);
   Serial.print("Message: ");
   for (unsigned int i = 0; i < length; i++) {
-      Serial.print((char) payload[i]);
+    Serial.print((char) payload[i]);
   }
   Serial.println();
   Serial.println("-----------------------");

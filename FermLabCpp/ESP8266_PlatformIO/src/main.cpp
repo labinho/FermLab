@@ -35,16 +35,16 @@ void setup() {
   mosq_client.setServer(mosq_server, mosq_port);
   mosq_client.setCallback(mosq_callback);
   while (!mosq_client.connected()) {
-      String mosq_client_id = "ESP8266-";
-      mosq_client_id += String(WiFi.macAddress());
-      Serial.printf("The client %s connects to the public MQTT broker\n", mosq_client_id.c_str());
-      if (mosq_client.connect(mosq_client_id.c_str(), mosq_username, mosq_password)) {
-          Serial.println("Local Mosquitto server connected");
-      } else {
-          Serial.print("Failed with state ");
-          Serial.print(mosq_client.state());
-          delay(2000);
-      }
+    String mosq_client_id = "ESP8266-";
+    mosq_client_id += String(WiFi.macAddress());
+    Serial.printf("The client %s connects to the public MQTT broker\n", mosq_client_id.c_str());
+    if (mosq_client.connect(mosq_client_id.c_str(), mosq_username, mosq_password)) {
+      Serial.println("Local Mosquitto server connected");
+    } else {
+      Serial.print("Failed with state ");
+      Serial.print(mosq_client.state());
+      delay(2000);
+    }
   }
   mosq_client.publish(topic_1, "hello ESP8266 Mosquitto");
   mosq_client.subscribe(topic_2);
