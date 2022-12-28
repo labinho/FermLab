@@ -1,96 +1,61 @@
+/************************************************************************************************
+ * Name:        Main.cpp
+ * Date:        26.Dec.2022
+ * Author:      Christopher Labisch
+ * Description:
+ * This file contains all the functionalities to serve as an IIoT edge of node or IIoT device.
+ ************************************************************************************************/
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
 #include <time.h>
 #include <TZ.h>
-
-#include "pb.h"
-#include "pb_common.h"
-#include "pb_encode.h"
-#include "pb_decode.h"
-#include "sparkplug_b.pb.h"
-
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+// not yet in use
+// #include <pb.h>
+// #include <pb_common.h>
+// #include <pb_encode.h>
+// #include <pb_decode.h>
+// #include <sparkplug_b.pb.h>
 #include "credentials.h"
+#include "connection.h"
 
-extern char *tzname[2];
+const char *topic_1 = "esp8266/welcome";
+const char *topic_2 = "esp8266/input1";
+const char *topic_3 = "esp8266/input2";
+const char *topic_4 = "esp8266/output1";
 
-org_eclipse_tahu_protobuf_Payload payload = org_eclipse_tahu_protobuf_Payload_init_zero;
-
-void setup_wifi() {
-  delay(10);
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  randomSeed(micros());
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-}
-
-time_t setDateTime() {
-  configTime(TZ_Europe_Berlin, "pool.ntp.org", "time.nist.gov");
-  time_t now = time(nullptr);
-  while (now < 8 * 3600 * 2) {
-    delay(100);
-    now = time(nullptr);
-  }
-  struct tm timeinfo;
-  gmtime_r(&now, &timeinfo);
-  return now;
-}
-
-uint64_t getSeqNo() {
-  if (payload.seq == 256) {
-    payload.seq = 0;
-  }
-  payload.seq++;
-  return payload.seq;
-}
+WiFiClient espClient;
+PubSubClient mosq_client(espClient);
 
 void setup() {
-  delay(500);
-  Serial.begin(9600);
-  delay(500);
   pinMode(LED_BUILTIN, OUTPUT); 
   digitalWrite(LED_BUILTIN, HIGH);
-  setup_wifi();
-  time_t current_time = setDateTime();
-
-  payload.has_timestamp = true;
-  payload.timestamp = current_time;
-
-  payload.has_seq = true;
-  payload.seq = 0;
-}
-
-void generate_random_payload() {
-
-  payload.timestamp = setDateTime();
-  payload.seq = getSeqNo();
-
-  Serial.print("payload [");
-
-  Serial.print("timestamp=");
-  Serial.print(payload.timestamp);
-  Serial.print(", ");
-  
-  Serial.print("seq=");
-  Serial.print(payload.seq);
-  Serial.println("]");
+  Serial.begin(9600);
+  setup_wifi(wifi_ssid, wifi_password);
+  mosq_client.setServer(mosq_server, mosq_port);
+  mosq_client.setCallback(mosq_callback);
+  while (!mosq_client.connected()) {
+      String mosq_client_id = "ESP8266-";
+      mosq_client_id += String(WiFi.macAddress());
+      Serial.printf("The client %s connects to the public MQTT broker\n", mosq_client_id.c_str());
+      if (mosq_client.connect(mosq_client_id.c_str(), mosq_username, mosq_password)) {
+          Serial.println("Local Mosquitto server connected");
+      } else {
+          Serial.print("Failed with state ");
+          Serial.print(mosq_client.state());
+          delay(2000);
+      }
+  }
+  mosq_client.publish(topic_1, "hello ESP8266 Mosquitto");
+  mosq_client.subscribe(topic_2);
+  mosq_client.subscribe(topic_3);
 }
 
 void loop() {
-  
   digitalWrite(LED_BUILTIN, LOW);
   delay(1000);
   digitalWrite(LED_BUILTIN, HIGH);
   delay(1000);
-
-  generate_random_payload();
+  mosq_client.publish(topic_4, "output1");
+  mosq_client.loop();
 }
