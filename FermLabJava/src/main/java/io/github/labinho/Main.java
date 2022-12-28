@@ -62,12 +62,19 @@ import org.eclipse.tahu.util.CompressionAlgorithm;
 import org.eclipse.tahu.util.PayloadUtil;
 
 public class Main {
+    private static final boolean USING_COMPRESSION = false;
+    private static final CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.GZIP;
+    private static final String NAMESPACE = "spBv1.0";
     private int seq = 0;
+    private int bdSeq = 0;
     // TODO: Find out what seqLock is doing.
     private Object seqLock = new Object();
     private String serverUrl = "tcp://localhost:1883";
+    private String edgeNode = "FermLabJava Sparkplug B Example";
+    private String groupId = "Sparkplug B Devices";
     private String clientId = "SparkplugBExampleEdgeNode";
     private MqttClient client;
+    private ExecutorService executor;
 
     public void run() {
         try {
@@ -96,7 +103,27 @@ public class Main {
                 // seq = 0;
                 // TODO: What is the structure of 'payload'? Find out how to access and populate 'ArrayList'.
                 SparkplugBPayload payload = new SparkplugBPayload(new Date(), new ArrayList<>(), getSeqNum(), newUUID(), null);
+                payload.addMetric(new MetricBuilder("bdSeq", Int64, (long) bdSeq).createMetric());
+                payload.addMetric(new MetricBuilder("Node Control/Rebirth", Boolean, false).createMetric());
+                PropertySet nestedPropertySet = new PropertySetBuilder()
+                        .addProperty("custom", new PropertyValue(PropertyDataType.String, "Custom Value"))
+                        .createPropertySet();
+                PropertySet propertySet = new PropertySetBuilder()
+                        .addProperty("engUnit", new PropertyValue(PropertyDataType.String, "My Units"))
+                        .addProperty("engLow", new PropertyValue(PropertyDataType.Double, 1.0))
+                        .addProperty("engHigh", new PropertyValue(PropertyDataType.Double, 10.0))
+                        .addProperty("Custom nested node prop", new PropertyValue(PropertyDataType.PropertySet, nestedPropertySet))
+                        /*
+                         * .addProperty("CustA", new PropertyValue(PropertyDataType.String, "Custom A"))
+                         * .addProperty("CustB", new PropertyValue(PropertyDataType.Double, 10.0)) .addProperty("CustC",
+                         * new PropertyValue(PropertyDataType.Int32, 100))
+                         */
+                        .createPropertySet();
+                payload.addMetric(
+                        new MetricBuilder("MyMetric", String, "My Value").properties(propertySet).createMetric());
+                System.out.println("Publishing Edge Node Birth");
                 System.out.println(payload);
+                //executor.execute(new Publisher(NAMESPACE + "/" + groupId + "/NBIRTH/" + edgeNode, payload));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -112,5 +139,37 @@ public class Main {
     }
     private String newUUID() {
         return java.util.UUID.randomUUID().toString();
+    }
+    private class Publisher implements Runnable {
+
+        private String topic;
+        private SparkplugBPayload outboundPayload;
+
+        public Publisher(String topic, SparkplugBPayload outboundPayload) {
+            this.topic = topic;
+            this.outboundPayload = outboundPayload;
+        }
+
+        public void run() {
+            try {
+                outboundPayload.setTimestamp(new Date());
+                SparkplugBPayloadEncoder encoder = new SparkplugBPayloadEncoder();
+
+                // Compress payload (optional)
+                if (USING_COMPRESSION) {
+                    client.publish(topic,
+                            encoder.getBytes(PayloadUtil.compress(outboundPayload, compressionAlgorithm, false), false),
+                            0, false);
+                } else {
+                    client.publish(topic, encoder.getBytes(outboundPayload, false), 0, false);
+                }
+            } catch (MqttPersistenceException e) {
+                e.printStackTrace();
+            } catch (MqttException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
