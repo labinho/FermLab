@@ -1,10 +1,10 @@
 /************************************************************************************************
- * Name:        Main.cpp
- * Date:        26.Dec.2022
- * Author:      Christopher Labisch
- * Description:
- * This file contains all the functionalities to serve as an IIoT edge of node or IIoT device.
- ************************************************************************************************/
+* Name:        Main.cpp
+* Date:        26.Dec.2022
+* Author:      Christopher Labisch
+* Description:
+* This file contains all the functionalities to serve as an IIoT edge of node or IIoT device.
+************************************************************************************************/
 #include <Arduino.h>
 #include <time.h>
 #include <TZ.h>
@@ -19,6 +19,13 @@
 #include "credentials.h"
 #include "connection.h"
 
+// TODO: Sparkplug B Device Specifications
+// const char namespace = "SpBv1.0";
+// const char groupID = "BR1L";
+// const char edgeNodeId = "Edge Node ID";
+// const char deviceId = "device ID";
+
+// Example topics
 const char *topic_1 = "esp8266/welcome";
 const char *topic_2 = "esp8266/input1";
 const char *topic_3 = "esp8266/input2";
@@ -30,6 +37,8 @@ PubSubClient mosq_client(espClient);
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT); 
   digitalWrite(LED_BUILTIN, HIGH);
+
+  // WiFi and Mosquitto setup
   Serial.begin(9600);
   setup_wifi(wifi_ssid, wifi_password);
   mosq_client.setServer(mosq_server, mosq_port);
@@ -46,12 +55,22 @@ void setup() {
       delay(2000);
     }
   }
+  
+  /*TODO: Publish Birth Certificates
+  *
+  * publishBirthCertificates();
+  * |_ publishNodeBirth();
+  * |_ publishDeviceBirth();
+  */
+
+  // example code
   mosq_client.publish(topic_1, "hello ESP8266 Mosquitto");
   mosq_client.subscribe(topic_2);
   mosq_client.subscribe(topic_3);
 }
 
 void loop() {
+  // example code
   digitalWrite(LED_BUILTIN, LOW);
   delay(1000);
   digitalWrite(LED_BUILTIN, HIGH);
