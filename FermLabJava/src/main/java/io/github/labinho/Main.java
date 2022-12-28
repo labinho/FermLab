@@ -150,6 +150,7 @@ public class Main {
             this.outboundPayload = outboundPayload;
         }
 
+        // TODO: what is the difference between this "run()" and in line 79?
         public void run() {
             try {
                 outboundPayload.setTimestamp(new Date());
