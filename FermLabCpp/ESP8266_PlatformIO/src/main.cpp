@@ -18,6 +18,7 @@
 // #include <sparkplug_b.pb.h>
 #include "credentials.h"
 #include "connection.h"
+#include "publishBirths.h"
 
 // TODO: Sparkplug B Device Specifications
 // const char namespace = "SpBv1.0";
@@ -55,16 +56,14 @@ void setup() {
       delay(2000);
     }
   }
-  
-  /*TODO: Publish Birth Certificates
-  *
-  * publishBirthCertificates();
-  * |_ publishNodeBirth();
-  * |_ publishDeviceBirth();
-  */
+
+  // TODO: publish Birth Certificates
+  publishBirthCertificates();
 
   // example code
   mosq_client.publish(topic_1, "hello ESP8266 Mosquitto");
+  // TODO: incoming JSON strings that excced a certain size are not displayed anymore.
+  // Find out whether Serial.println() or mosq_callback() has a buffer overflow.
   mosq_client.subscribe(topic_2);
   mosq_client.subscribe(topic_3);
 }

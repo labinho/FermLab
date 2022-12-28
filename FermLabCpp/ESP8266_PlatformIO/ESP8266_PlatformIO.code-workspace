@@ -6,7 +6,8 @@
 	],
 	"settings": {
 		"files.associations": {
-			"stop_token": "cpp"
+			"stop_token": "cpp",
+			"publishbirths.h": "c"
 		}
 	}
 }
